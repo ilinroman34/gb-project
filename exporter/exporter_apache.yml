@@ -1,0 +1,47 @@
+---
+- name: Setup node-exporter service
+  hosts: app
+  vars:
+    version: 1.7.0
+  gather_facts: no
+
+  tasks:
+    - name: Install prometheus-apache-exporte
+      apt:
+        name: prometheus-apache-exporter
+        state: latest
+        update_cache: yes
+      become: yes
+
+#    - name: Download node exporter
+#      command: wget http://github.com/Lusitaniae/apache_exporter
+
+#    - name: Extract node exporter archieve
+#      command: tar xvfz node_exporter-{{version}}.linux-amd64.tar.gz
+
+#    - name: Move node-exporter to /usr/local/bin
+#      command: mv apache_exporter /usr/local/bin/
+#      become: yes
+
+#    - name: Create node_exporter user
+#      user:
+#        name: apache_exporter
+#        system: yes
+#        create_home: no
+#        shell: /bin/false
+#      become: yes
+
+#    - name: Copy node_exporter.service file to /etc/systemd/system
+#      copy:
+#        src: ../files/apache_exporter.service
+#        dest: /etc/systemd/system/apache_exporter.service
+#        mode: '0777'
+#      become: yes
+
+#    - name: Restart and enable node exporter service
+#      systemd:
+#        name: apache_exporter
+#        state: restarted
+#        enabled: yes
+#        daemon_reload: yes
+#      become: yes

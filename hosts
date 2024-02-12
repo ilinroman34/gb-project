@@ -1,0 +1,10 @@
+app:
+  hosts:
+#    10.0.0.6:
+#      ansible_user: ubuntu
+    10.0.0.13:
+      ansible_user: ubuntu
+#db01:
+#  hosts:
+#    10.0.0.20:
+#      ansible_user: ubuntu

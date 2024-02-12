@@ -1,0 +1,97 @@
+---
+- name: mysql_cluster
+  become: true
+  hosts: db01
+  vars:
+    mysql_image: "mysql:latest"
+    mysql_persistence_enabled: true
+    mysql_replication_user: "repl_user"
+    mysql_replication_password: "repl_password"
+    mysql_user: "wordpress"
+    mysql_password: "wordpress"
+    mysql_exporter_user: "exporter"
+    mysql_exporter_password: "exporter"
+    mysql_database: "wordpress"
+    mysql_root_password: "master_password"
+  tasks:
+    - name: install dependencies
+      apt:
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+    - name: add GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: add docker repository to apt
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+    - name: install docker
+      apt:
+        name: "{{item}}"
+        state: latest
+        update_cache: yes
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+    - name: check docker is active
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Ensure group "docker" exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+    - name: adding user ubuntu to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+    - name: Install docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 'u+x,g+x'
+    - name: Change file ownership, group and permissions
+      ansible.builtin.file:
+        path: /usr/local/bin/docker-compose
+        owner: ubuntu
+        group: ubuntu
+
+
+    - name: MySQL | Create compose directory
+      file:
+        path: "./mysql"
+        state: directory
+        recurse: yes
+
+    - name: MySQL | Create mster db directory
+      file:
+        path: "./mysql/db/master"
+        state: directory
+        recurse: yes
+
+    - name: MySQL | Create slave db directory
+      file:
+        path: "./mysql/db/slave"
+        state: directory
+        recurse: yes
+
+    - name: MySQL | Copy MySQL docker compose file
+      template:
+        src: docker-compose.yml.j2
+        dest: "./mysql/docker-compose.yml"
+
+    - name: MySQL | Run mysql cluster
+      community.docker.docker_compose_v2:
+        project_name: mysql
+        project_src: "./mysql"
