@@ -1,0 +1,40 @@
+- hosts: all
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+
+  - name: install local packages
+    local_action: package name=git state=present
+
+  - name: add Ansible module
+    script: ./files/add_ansible_module.sh
+
+  - name: install Git
+    package: name=git state=latest
+
+
+  - name: install rsync
+    package: name=rsync state=latest
+
+  - name: Gitclonerepo
+    git:
+      repo: "https://github.com/Myherman/gb-project.git"
+      dest: ~/repo
+      clone: yes
+      update: yes
+
+- hosts: app
+  become: yes
+  tasks:
+
+  - name: install rsync
+    package: name=rsync state=latest
+  - name: сreate directory
+    file: path=/var/www/your_domain/wordpress/wp-content state=directory
+
+
+  - name: Synchronization of src on the control machine to dest on the remote hosts
+    ansible.posix.synchronize:
+      src: ~/repo/wp-content
+      dest: /var/www/your_domain/wordpress/wp-content
